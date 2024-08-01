@@ -120,7 +120,7 @@ else:
 
 create_config('')
 setup(name='dnsviz',
-        version='0.10.0',
+        version='0.11.0',
         author='Casey Deccio',
         author_email='casey@deccio.net',
         url='https://github.com/dnsviz/dnsviz/',
@@ -135,7 +135,7 @@ powers the Web-based analysis available at http://dnsviz.net/ .''',
                 DOC_EXTRA_FILES + JQUERY_UI_FILES + JQUERY_FILES + RAPHAEL_FILES,
         requires=[
                 'pygraphviz (>=1.3)',
-                'm2crypto (>=0.37.0)',
+                'cryptography (>=36.0.0)',
                 'dnspython (>=1.13)',
         ],
         classifiers=[
@@ -154,6 +154,9 @@ powers the Web-based analysis available at http://dnsviz.net/ .''',
                 'Programming Language :: Python :: 3.7',
                 'Programming Language :: Python :: 3.8',
                 'Programming Language :: Python :: 3.9',
+                'Programming Language :: Python :: 3.10',
+                'Programming Language :: Python :: 3.11',
+                'Programming Language :: Python :: 3.12',
                 'Topic :: Internet :: Name Service (DNS)',
                 'Topic :: Scientific/Engineering :: Visualization',
                 'Topic :: System :: Networking :: Monitoring',

@@ -17,16 +17,19 @@ powers the Web-based analysis available at https://dnsviz.net/
 
 ## Installation
 
-DNSViz packages are available in repositories for popular operating systems,
-such as Debian, Ubuntu, Fedora, and FreeBSD, using their typical installation
-commands.  DNSViz can also be installed on Mac OS X via Homebrew or MacPorts.
+DNSViz is available in package repositories for popular operating systems, such
+as Debian, Ubuntu, Fedora, Gentoo, and FreeBSD.  It is also available in the
+Extra Packages for Linux (EPEL) repository for Red Hat Enterprise Linux
+(RHEL) 8 and 9 and CentOS 8 and 9. (See
+[notes](#rhel-89-or-centos-stream-89-notes) for installation on RHEL and
+Centos.)  In each case, it can be installed using the package installation
+commands typical for that operating system.  DNSViz can also be installed on
+Mac OS X using Homebrew or MacPorts.
 
 The remainer of this section covers other methods of installation, including a
 list of [dependencies](#dependencies), installation to a
-[virtual environment](#installation-in-a-virtual-environment), and installation
-on
-[RHEL 8 or 9, CentOS Stream 8 or 9,](#rhel-89-or-centos-stream-89----rpm-build-and-install),
-and [RHEL 7](#rhel-7-rpm-build-and-install).
+[virtual environment](#installation-in-a-virtual-environment), and
+[notes for installing on RHEL 8 or 9 or CentOS Stream 8 or 9,](#rhel-89-or-centos-stream-89-notes)).
 
 Instructions for running in a Docker container are also available
 [later in this document](#docker-container).
@@ -34,21 +37,20 @@ Instructions for running in a Docker container are also available
 
 ### Dependencies
 
-* python (2.7, 3.5 - 3.11) - https://www.python.org/
+* Python (2.7, 3.5 - 3.12) - https://www.python.org/
   (Note that python 2.7 support will be removed in a future release.)
 
 * dnspython (1.13.0 or later) - https://www.dnspython.org/
 
 * pygraphviz (1.3 or later) - https://pygraphviz.github.io/
 
-* M2Crypto (0.38.0 or later) - https://gitlab.com/m2crypto/m2crypto
+* cryptography (36.0.0 or later) - https://cryptography.io/
 
 Note that earlier versions of the software listed above might also work with
-DNSViz, but with some caveats.  For example, M2Crypto 0.28.0 and later will
-work, but versions of M2Crypto earlier than 0.38.0 lack support for DNSSEC
-algorithms 15 (Ed25519) and 16 (Ed448).  Also, while DNSViz itself still works
-with python 2.7, some versions of its software dependencies have moved on:
-pygraphviz 1.6 and dnspython 2.0.0 dropped support for python 2.7.
+DNSViz, but are not supported.  For example, versions of cryptography as early
+as 2.6 seem to work.  Also note that while DNSViz itself still works with
+Python 2.7, some versions of its software dependencies have moved on:
+pygraphviz 1.6 and dnspython 2.0.0 dropped support for Python 2.7.
 
 
 ### Optional Software
@@ -57,7 +59,16 @@ pygraphviz 1.6 and dnspython 2.0.0 dropped support for python 2.7.
 
   With OpenSSL version 1.1.0 and later, the OpenSSL GOST Engine is necessary to
   validate DNSSEC signatures with algorithm 12 (GOST R 34.10-2001) and create
-  digests of type 3 (GOST R 34.11-94).
+  digests of type 3 (GOST R 34.11-94).  M2Crypto is also needed for GOST support.
+
+* M2Crypto - https://gitlab.com/m2crypto/m2crypto
+
+  While almost all of the cryptgraphic support for DNSViz is handled with the
+  cryptography Python module, support for algorithm 12 (GOST R 34.10-2001)
+  digest type 3 (GOST R 34.11-94) require the OpenSSL GOST Engine.  That engine
+  must be loaded dynamically, and there is no support for that with
+  cryptography.  Thus, if you need to support algorithm 12 or digest type 3,
+  you must also install M2Crypto.
 
 * ISC BIND - https://www.isc.org/bind/
 
@@ -92,10 +103,10 @@ $ virtualenv ~/myenv
 $ source ~/myenv/bin/activate
 (myenv) $ pip install -r requirements.txt
 ```
-Note that this installs the dependencies that are python packages, but some of
-these packages have non-python dependencies, such as Graphviz (required for
-pygraphviz), OpenSSL (required for M2Crypto), and swig (required for building
-either) that are not installed automatically.
+Note that this installs the dependencies that are Python packages, but some of
+these packages have non-Python dependencies, such as Graphviz (required for
+pygraphviz) and OpenSSL (required for cryptography), that are not installed
+automatically.
 
 Next download and install DNSViz from the Python Package Index (PyPI):
 ```
@@ -107,10 +118,10 @@ or locally, from a downloaded or cloned copy of DNSViz:
 ```
 
 
-### RHEL 8/9 or CentOS Stream 8/9 -- RPM Build and Install
+### RHEL 8/9 or CentOS Stream 8/9 Notes
 
-To build an RPM and install it on RHEL 8 or 9 or CentOS Stream 8 or 9, use the
-following instructions.
+DNSViz can be installed on RHEL 8 or 9 or CentOS Stream 8 or 9 from the EPEL
+repository.  Follow the instructions in this section to enable EPEL.
 
 *RHEL 8 and 9 only*: Enable CodeReady Linux Builder and Extra Packages for
 Enterprise Linux (EPEL) with following:
@@ -133,61 +144,12 @@ $ sudo dnf install epel-release
 (where `$(tool)` refers to the tool, either `powertools` for CentOS Stream 8 or
 `crb` for CentOS Stream 9.)
 
-The remaining instructions are for RHEL 8 or 9 *and* CentOS Stream 8 or 9.
-
-Install the tools for building an RPM, and set up the rpmbuild tree.
-
-```
-$ sudo dnf install rpm-build rpmdevtools make python3-devel python3-build
-$ rpmdev-setuptree
-```
-
-From within the DNSViz source directory, create a source distribution tarball
-and copy it and the DNSViz spec file to the appropriate rpmbuild
-subdirectories.
+For both RHEL 8 or 9 *and* CentOS Stream 8 or 9, once EPEL is enabled, install
+DNSViz using `dnf`:
 
 ```
-$ python3 -m build
-$ cp dist/dnsviz-*.tar.gz ~/rpmbuild/SOURCES/
-$ cp contrib/dnsviz.spec ~/rpmbuild/SPECS/
+$ sudo dnf install dnsviz
 ```
-
-Install dnspython, pygraphviz, and M2Crypto.
-
-```
-$ sudo dnf install python3-dns python3-pygraphviz python3-m2crypto
-```
-(Note that for RHEL 8 and CentOS Stream 8, the version of M2Crypto is 0.35.  If
-you would like support for DNSSEC algorithms 15 (Ed25519) and 16 (Ed448),
-[M2Crypto 0.38 or higher is required](#dependencies).  Thus, if you want this
-functionality, you will need to install M2Crypto using `pip3`.  For example,
-see
-[installation to a virtual environment](#installation-in-a-virtual-environment).)
-
-Build and install the DNSViz RPM.
-```
-$ rpmbuild -ba rpmbuild/SPECS/dnsviz.spec
-$ sudo rpm -iv rpmbuild/RPMS/noarch/dnsviz-*.noarch.rpm
-```
-
-
-### RHEL 7 RPM Build and Install
-
-Install pygraphviz, M2Crypto, and dnspython, after installing their build dependencies.
-```
-$ sudo yum install python3 gcc python3-devel graphviz-devel openssl-devel swig
-$ pip3 install --user pbr m2crypto pygraphviz dnspython
-```
-
-Install rpm-build tools, then build and install the DNSViz RPM.
-```
-$ sudo yum install rpm-build
-$ python3 setup.py bdist_rpm --install-script contrib/rpm-install.sh --distribution-name el7
-$ sudo rpm -iv dist/dnsviz-*-1.noarch.rpm
-```
-
-Note that a custom install script is used to properly install the DNSViz man
-pages.
 
 
 ## Usage
