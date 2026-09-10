@@ -45,7 +45,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa as RSA
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives.asymmetric import utils
 from cryptography.hazmat.primitives import hashes
-from cryptography.exceptions import InvalidSignature
+from cryptography.exceptions import InvalidSignature, UnsupportedAlgorithm
 
 from . import format as fmt
 lb2s = fmt.latin1_binary_to_string
@@ -63,6 +63,7 @@ ALG_TYPE_DNSSEC_TEXT = [
 ]
 
 _crypto_sources = {
+        'cryptography >= 47.0.0': (set([18]), set(), set()),
         'M2Crypto >= 0.24.0 and openssl >= 1.1.0 plus the OpenSSL GOST Engine': (set([12]), set([3]), set()),
 }
 _logged_modules = (set(), set(), set())
@@ -113,6 +114,14 @@ def _check_gost_support():
     finally:
         _gost_cleanup()
 
+def _check_mldsa_support():
+    try:
+        MLDSA.MLDSA44PublicKey.from_public_bytes(b'\x00' * 1312)
+    except UnsupportedAlgorithm:
+        pass
+    else:
+        _supported_algs.add(18)
+
 def alg_is_supported(alg):
     return alg in _supported_algs
 
@@ -146,6 +155,12 @@ def _gost_cleanup():
         pass
     else:
         gost.finish()
+
+try:
+    from cryptography.hazmat.primitives.asymmetric import mldsa as MLDSA
+    _check_mldsa_support()
+except ImportError:
+    pass
 
 try:
     from M2Crypto import Engine, EVP, m2
@@ -316,6 +331,12 @@ def _dnskey_to_ec(alg, key):
     except ValueError:
         return None
 
+def _dnskey_to_mldsa(alg, key):
+    try:
+        return MLDSA.MLDSA44PublicKey.from_public_bytes(key)
+    except ValueError:
+        return None
+
 def _validate_rrsig_rsa(alg, sig, msg, key):
     pubkey = _dnskey_to_rsa(key)
 
@@ -462,6 +483,20 @@ def _validate_rrsig_ed(alg, sig, msg, key):
     else:
         return True
 
+def _validate_rrsig_mldsa(alg, sig, msg, key):
+    pubkey = _dnskey_to_mldsa(alg, key)
+
+    # if the key is invalid, then the signature is also invalid
+    if pubkey is None:
+        return False
+
+    try:
+        pubkey.verify(sig, msg)
+    except InvalidSignature:
+        return False
+    else:
+        return True
+
 def validate_rrsig(alg, sig, msg, key):
     if not alg_is_supported(alg):
         _log_unsupported_alg(alg, ALG_TYPE_DNSSEC)
@@ -478,6 +513,8 @@ def validate_rrsig(alg, sig, msg, key):
         return _validate_rrsig_ec(alg, sig, msg, key)
     elif alg in (15,16):
         return _validate_rrsig_ed(alg, sig, msg, key)
+    elif alg in (18,):
+        return _validate_rrsig_mldsa(alg, sig, msg, key)
 
 def get_digest_for_nsec3(val, salt, alg, iterations):
     if not nsec3_alg_is_supported(alg):

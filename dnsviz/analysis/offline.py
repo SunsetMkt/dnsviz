@@ -60,12 +60,12 @@ DNS_PROCESSED_VERSION = '1.0'
 EDNS_DEFINED_FLAGS = dns.flags.DO
 
 DNSSEC_KEY_LENGTHS_BY_ALGORITHM = {
-        12: 512, 13: 512, 14: 768, 15: 256, 16: 456,
+        12: 512, 13: 512, 14: 768, 15: 256, 16: 456, 18: 10496
 }
 DNSSEC_KEY_LENGTH_ERRORS = {
         12: Errors.DNSKEYBadLengthGOST, 13: Errors.DNSKEYBadLengthECDSA256,
         14: Errors.DNSKEYBadLengthECDSA384, 15: Errors.DNSKEYBadLengthEd25519,
-        16: Errors.DNSKEYBadLengthEd448,
+        16: Errors.DNSKEYBadLengthEd448, 18: Errors.DNSKEYBadLengthMLDSA44,
 }
 DNSSEC_DELETE_ALG = 0
 

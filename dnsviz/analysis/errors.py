@@ -2641,6 +2641,18 @@ class DNSKEYBadLengthEd448(DNSKEYBadLengthEdDSA):
     _abstract = False
     code = 'DNSKEY_BAD_LENGTH_ED448'
 
+class DNSKEYBadLengthMLDSA44(DNSKEYBadLength):
+    '''
+    >>> e = DNSKEYBadLengthMLDSA44(length=500)
+    >>> e.description
+    'The length of the key is 500 bits, but an ML-DSA-44 public key (DNSSEC algorithm 18) must be 10,496 bites (1,312 bits) long.  See ...'
+    '''
+    _abstract = False
+    description_template = 'The length of the key is %(length)d bits, but an ML-DSA-44 public key (DNSSEC algorithm 18) must be 10,496 bits (1,312 bytes) long.'
+    code = 'DNSKEY_BAD_LENGTH_MLDSA44'
+    references = ['draft-westerbaan-dnssec-mldsa-03, Sec. 3']
+    required_params = ['length']
+
 class TrustAnchorError(DomainNameAnalysisError):
     pass
 
