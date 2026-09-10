@@ -2645,7 +2645,7 @@ class DNSKEYBadLengthMLDSA44(DNSKEYBadLength):
     '''
     >>> e = DNSKEYBadLengthMLDSA44(length=500)
     >>> e.description
-    'The length of the key is 500 bits, but an ML-DSA-44 public key (DNSSEC algorithm 18) must be 10,496 bites (1,312 bits) long.  See ...'
+    'The length of the key is 500 bits, but an ML-DSA-44 public key (DNSSEC algorithm 18) must be 10,496 bits (1,312 bytes) long.  See ...'
     '''
     _abstract = False
     description_template = 'The length of the key is %(length)d bits, but an ML-DSA-44 public key (DNSSEC algorithm 18) must be 10,496 bits (1,312 bytes) long.'
